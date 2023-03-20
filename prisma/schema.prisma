@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int              @id @default(autoincrement())
+  email          String           @unique
+  name           String
+  password       String
+  CompareHistory CompareHistory[]
+}
+
+model Stock {
+  id                     Int                      @id @default(autoincrement())
+  name                   String                   @unique
+  image                  String
+  ticker                 String
+  CompareHistoryRelation CompareHistoryRelation[]
+}
+
+model CompareHistoryRelation {
+  id                Int            @id @default(autoincrement())
+  compareHistory_id Int
+  compareHistory    CompareHistory @relation(fields: [compareHistory_id], references: [id])
+  stock_id          Int
+  stock             Stock          @relation(fields: [stock_id], references: [id])
+}
+
+model CompareHistory {
+  id                     Int                      @id @default(autoincrement())
+  stock_id               Int
+  user                   User                     @relation(fields: [userId], references: [id])
+  createdAt              DateTime                 @default(now())
+  userId                 Int
+  CompareHistoryRelation CompareHistoryRelation[]
+}
