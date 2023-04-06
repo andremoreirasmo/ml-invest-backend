@@ -48,7 +48,7 @@ export class StockService {
       },
     });
 
-    const promiseSummary = yahooFinance.quoteSummary('PBR', {
+    const promiseSummary = yahooFinance.quoteSummary(result.ticker, {
       modules: [
         'assetProfile',
         'price',
@@ -60,12 +60,24 @@ export class StockService {
     });
 
     const fiveYearsAgo = addYears(new Date(), -5);
-    const promiseChart = yahooFinance._chart('PBR', {
+    const promiseChart = yahooFinance._chart(result.ticker, {
       period1: fiveYearsAgo,
       lang: 'pt-BR',
     });
 
-    const [summary, chart] = await Promise.all([promiseSummary, promiseChart]);
+    // eslint-disable-next-line prefer-const
+    let [summary, chart] = await Promise.all([promiseSummary, promiseChart]);
+
+    const price = summary.price;
+
+    summary = {
+      ...summary,
+      price: {
+        ...price,
+        regularMarketChangePercent:
+          (price.regularMarketChange * 100) / price.regularMarketPreviousClose,
+      },
+    };
 
     return { ...result, stockStatus: 0, summary, chart };
   }
