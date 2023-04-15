@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Stock } from '@prisma/client';
-import { addYears } from 'date-fns';
 import { PrismaService } from 'src/prisma.service';
 import yahooFinance from 'yahoo-finance2';
 import { CreateStockDto } from './dto/create-stock.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
+import { PeriodEnum, PeriodUtil } from './model/stock-chart.model';
 
 @Injectable()
 export class StockService {
@@ -41,6 +41,14 @@ export class StockService {
     }));
   }
 
+  async getChart(ticker: string, period: PeriodEnum) {
+    return yahooFinance._chart(ticker, {
+      period1: PeriodUtil.getPeriod(period),
+      interval: PeriodUtil.getInterval(period),
+      lang: 'pt-BR',
+    });
+  }
+
   async findOne(id: number) {
     const result = await this.prisma.stock.findUnique({
       where: {
@@ -59,11 +67,7 @@ export class StockService {
       ],
     });
 
-    const fiveYearsAgo = addYears(new Date(), -5);
-    const promiseChart = yahooFinance._chart(result.ticker, {
-      period1: fiveYearsAgo,
-      lang: 'pt-BR',
-    });
+    const promiseChart = this.getChart(result.ticker, PeriodEnum.OneDay);
 
     // eslint-disable-next-line prefer-const
     let [summary, chart] = await Promise.all([promiseSummary, promiseChart]);

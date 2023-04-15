@@ -1,15 +1,17 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
 } from '@nestjs/common';
-import { StockService } from './stock.service';
 import { CreateStockDto } from './dto/create-stock.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
+import { PeriodEnum, keyofPeriodEnum } from './model/stock-chart.model';
+import { StockService } from './stock.service';
 
 @Controller('stock')
 export class StockController {
@@ -28,6 +30,14 @@ export class StockController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.stockService.findOne(+id);
+  }
+
+  @Get('chart/:ticker')
+  getChart(
+    @Param('ticker') ticker: string,
+    @Query('period') period: keyofPeriodEnum,
+  ) {
+    return this.stockService.getChart(ticker, PeriodEnum[period]);
   }
 
   @Patch(':id')
