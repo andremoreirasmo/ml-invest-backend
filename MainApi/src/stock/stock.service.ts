@@ -49,7 +49,7 @@ export class StockService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, period: PeriodEnum) {
     const result = await this.prisma.stock.findUnique({
       where: {
         id,
@@ -67,7 +67,7 @@ export class StockService {
       ],
     });
 
-    const promiseChart = this.getChart(result.ticker, PeriodEnum.OneDay);
+    const promiseChart = this.getChart(result.ticker, period);
 
     // eslint-disable-next-line prefer-const
     let [summary, chart] = await Promise.all([promiseSummary, promiseChart]);

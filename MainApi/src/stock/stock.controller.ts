@@ -28,8 +28,8 @@ export class StockController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.stockService.findOne(+id);
+  findOne(@Param('id') id: string, @Query('period') period: keyofPeriodEnum) {
+    return this.stockService.findOne(+id, PeriodEnum[period]);
   }
 
   @Get('chart/:ticker')
