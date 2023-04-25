@@ -30,18 +30,22 @@ export class PeriodUtil {
   static getInterval(e: PeriodEnum): IntervalType {
     switch (e) {
       case PeriodEnum.OneDay:
-        return '15m';
+        return '5m';
 
       case PeriodEnum.OneWeek:
-      case PeriodEnum.OneMonth:
         return '90m';
 
+      case PeriodEnum.OneMonth:
+        return '1d';
+
       case PeriodEnum.OneYear:
-      case PeriodEnum.FiveYears:
         return '1wk';
 
+      case PeriodEnum.FiveYears:
+        return '1mo';
+
       case PeriodEnum.Max:
-        return '5d';
+        return '3mo';
 
       default:
         return '1h';
