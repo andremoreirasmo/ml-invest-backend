@@ -245,11 +245,9 @@ app = Flask(__name__)
 @app.route('/metrics', methods = ['GET'])
 def price_future():
   ticker = request.args.get('ticker')
-  date = request.args.get('date')
-  model_ticker = ticker + '_' + date
   
   # Carrega o modelo
-  model_path = os.path.join("archives/results", model_ticker) + ".h5"
+  model_path = os.path.join("archives/results", ticker) + ".h5"
   model.load_weights(model_path)
 
   data_ticker = load_data(ticker, n_steps=N_STEPS, split_by_date=SPLIT_BY_DATE, lookup_step=LOOKUP_STEP)
