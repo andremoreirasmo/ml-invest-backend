@@ -26,7 +26,7 @@ def shuffle_in_unison(a, b):
   np.random.set_state(state)
   np.random.shuffle(b)
 
-def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, split_by_date=True, test_size=0.2, feature_columns=['adjclose', 'volume', 'open', 'high', 'low']):
+def load_data(ticker, n_steps=50, scale=True, shuffle=False, lookup_step=1, split_by_date=True, test_size=0.2, feature_columns=['adjclose', 'volume', 'open', 'high', 'low']):
   """
   Loads data from Yahoo Finance source, as well as scaling, shuffling, normalizing and splitting.
   Params:
@@ -145,7 +145,6 @@ def create_model(sequence_length, n_features, units=256, cell=LSTM, n_layers=2, 
     # add dropout after each layer
     model.add(Dropout(dropout))
   model.add(Dense(1, activation="linear"))
-  model.compile(loss=loss, metrics=["mean_absolute_error"], optimizer=optimizer)
   return model
 
 # Window size or the sequence length
@@ -189,8 +188,6 @@ if not os.path.isdir("archives"):
   os.mkdir("archives")
 if not os.path.isdir("archives/results"):
   os.mkdir("archives/results")
-
-model = create_model(N_STEPS, len(FEATURE_COLUMNS), loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS, dropout=DROPOUT, optimizer=OPTIMIZER, bidirectional=BIDIRECTIONAL)
 
 def get_final_df(model, data):
   """
@@ -248,6 +245,7 @@ def price_future():
   
   # Carrega o modelo
   model_path = os.path.join("archives/results", ticker) + ".h5"
+  model = create_model(N_STEPS, len(FEATURE_COLUMNS), loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS, dropout=DROPOUT, optimizer=OPTIMIZER, bidirectional=BIDIRECTIONAL)
   model.load_weights(model_path)
 
   data_ticker = load_data(ticker, n_steps=N_STEPS, split_by_date=SPLIT_BY_DATE, lookup_step=LOOKUP_STEP)
