@@ -8,11 +8,37 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
 from sklearn import preprocessing
-from sklearn.model_selection import train_test_split
 from yahoo_fin import stock_info as si
 from collections import deque
 
 from flask import Flask, jsonify, request
+
+# Window size or the sequence length
+N_STEPS = 50
+# Lookup step, 1 is the next day
+LOOKUP_STEP = 1
+# whether to scale feature columns & output price as well
+SCALE = True
+scale_str = f"sc-{int(SCALE)}"
+# test ratio size, 0.2 is 20%
+TEST_SIZE = 0.2
+# features to use
+FEATURE_COLUMNS = ["adjclose", "volume", "open", "high", "low"]
+### model parameters
+N_LAYERS = 2
+# LSTM cell
+CELL = LSTM
+# 256 LSTM neurons
+UNITS = 256
+# 40% dropout
+DROPOUT = 0.4
+# whether to use bidirectional RNNs
+BIDIRECTIONAL = False
+### training parameters
+# mean absolute error loss
+# LOSS = "mae"
+# huber loss
+LOSS = "huber_loss"
 
 # set seed, so we can get the same results after rerunning several times
 np.random.seed(314)
@@ -26,7 +52,7 @@ def shuffle_in_unison(a, b):
   np.random.set_state(state)
   np.random.shuffle(b)
 
-def load_data(ticker, n_steps=50, scale=True, shuffle=False, lookup_step=1, split_by_date=True, test_size=0.2, feature_columns=['adjclose', 'volume', 'open', 'high', 'low']):
+def load_data(ticker, n_steps=50, scale=True, lookup_step=1, feature_columns=['adjclose', 'volume', 'open', 'high', 'low']):
   """
   Loads data from Yahoo Finance source, as well as scaling, shuffling, normalizing and splitting.
   Params:
@@ -90,7 +116,7 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=False, lookup_step=1, spli
   result['last_sequence'] = last_sequence 
   return result
 
-def create_model(sequence_length, n_features, units=256, cell=LSTM, n_layers=2, dropout=0.3, loss="mean_absolute_error", optimizer="rmsprop", bidirectional=False):
+def create_model(sequence_length, n_features, units=256, cell=LSTM, n_layers=2, dropout=0.3, bidirectional=False):
   model = Sequential()
   for i in range(n_layers):
     if i == 0:
@@ -115,42 +141,6 @@ def create_model(sequence_length, n_features, units=256, cell=LSTM, n_layers=2, 
     model.add(Dropout(dropout))
   model.add(Dense(1, activation="linear"))
   return model
-
-# Window size or the sequence length
-N_STEPS = 50
-# Lookup step, 1 is the next day
-LOOKUP_STEP = 1
-# whether to scale feature columns & output price as well
-SCALE = True
-scale_str = f"sc-{int(SCALE)}"
-# whether to shuffle the dataset
-SHUFFLE = True
-shuffle_str = f"sh-{int(SHUFFLE)}"
-# whether to split the training/testing set by date
-SPLIT_BY_DATE = True
-split_by_date_str = f"sbd-{int(SPLIT_BY_DATE)}"
-# test ratio size, 0.2 is 20%
-TEST_SIZE = 0.2
-# features to use
-FEATURE_COLUMNS = ["adjclose", "volume", "open", "high", "low"]
-### model parameters
-N_LAYERS = 2
-# LSTM cell
-CELL = LSTM
-# 256 LSTM neurons
-UNITS = 256
-# 40% dropout
-DROPOUT = 0.4
-# whether to use bidirectional RNNs
-BIDIRECTIONAL = False
-### training parameters
-# mean absolute error loss
-# LOSS = "mae"
-# huber loss
-LOSS = "huber_loss"
-OPTIMIZER = "adam"
-BATCH_SIZE = 64
-EPOCHS = 500
 
 # create these folders if they does not exist
 if not os.path.isdir("archives"):
@@ -181,10 +171,10 @@ def price_future():
   
   # Carrega o modelo
   model_path = os.path.join("archives/results", ticker) + ".h5"
-  model = create_model(N_STEPS, len(FEATURE_COLUMNS), loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS, dropout=DROPOUT, optimizer=OPTIMIZER, bidirectional=BIDIRECTIONAL)
+  model = create_model(N_STEPS, len(FEATURE_COLUMNS), units=UNITS, cell=CELL, n_layers=N_LAYERS, dropout=DROPOUT, bidirectional=BIDIRECTIONAL)
   model.load_weights(model_path)
 
-  data_ticker = load_data(ticker, n_steps=N_STEPS, split_by_date=SPLIT_BY_DATE, lookup_step=LOOKUP_STEP)  
+  data_ticker = load_data(ticker, n_steps=N_STEPS, lookup_step=LOOKUP_STEP)
 
   future_price = float(predict(model, data_ticker))  
 
