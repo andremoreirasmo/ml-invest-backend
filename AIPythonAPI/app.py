@@ -87,38 +87,7 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=False, lookup_step=1, spli
   last_sequence = list([s[:len(feature_columns)] for s in sequences]) + list(last_sequence)
   last_sequence = np.array(last_sequence).astype(np.float32)
   # add to result
-  result['last_sequence'] = last_sequence
-  # construct the X's and y's
-  X, y = [], []
-  for seq, target in sequence_data:
-    X.append(seq)
-    y.append(target)
-  # convert to numpy arrays
-  X = np.array(X)
-  y = np.array(y)
-  if split_by_date:
-    # split the dataset into training & testing sets by date (not randomly splitting)
-    train_samples = int((1 - test_size) * len(X))
-    result["X_train"] = X[:train_samples]
-    result["y_train"] = y[:train_samples]
-    result["X_test"]  = X[train_samples:]
-    result["y_test"]  = y[train_samples:]
-    if shuffle:
-      # shuffle the datasets for training (if shuffle parameter is set)
-      shuffle_in_unison(result["X_train"], result["y_train"])
-      shuffle_in_unison(result["X_test"], result["y_test"])
-  else:    
-    # split the dataset randomly
-    result["X_train"], result["X_test"], result["y_train"], result["y_test"] = train_test_split(X, y, test_size=test_size, shuffle=shuffle)
-  # get the list of test set dates
-  dates = result["X_test"][:, -1, -1]
-  # retrieve test features from the original dataframe
-  result["test_df"] = result["df"].loc[dates]
-  # remove duplicated dates in the testing dataframe
-  result["test_df"] = result["test_df"][~result["test_df"].index.duplicated(keep='first')]
-  # remove dates from the training/testing sets & convert to float32
-  result["X_train"] = result["X_train"][:, :, :len(feature_columns)].astype(np.float32)
-  result["X_test"] = result["X_test"][:, :, :len(feature_columns)].astype(np.float32)
+  result['last_sequence'] = last_sequence 
   return result
 
 def create_model(sequence_length, n_features, units=256, cell=LSTM, n_layers=2, dropout=0.3, loss="mean_absolute_error", optimizer="rmsprop", bidirectional=False):
@@ -158,7 +127,7 @@ scale_str = f"sc-{int(SCALE)}"
 SHUFFLE = True
 shuffle_str = f"sh-{int(SHUFFLE)}"
 # whether to split the training/testing set by date
-SPLIT_BY_DATE = False
+SPLIT_BY_DATE = True
 split_by_date_str = f"sbd-{int(SPLIT_BY_DATE)}"
 # test ratio size, 0.2 is 20%
 TEST_SIZE = 0.2
@@ -189,39 +158,6 @@ if not os.path.isdir("archives"):
 if not os.path.isdir("archives/results"):
   os.mkdir("archives/results")
 
-def get_final_df(model, data):
-  """
-  This function takes the `model` and `data` dict to 
-  construct a final dataframe that includes the features along 
-  with true and predicted prices of the testing dataset
-  """
-  # if predicted future price is higher than the current, 
-  # then calculate the true future price minus the current price, to get the buy profit
-  buy_profit  = lambda current, pred_future, true_future: true_future - current if pred_future > current else 0
-  # if the predicted future price is lower than the current price,
-  # then subtract the true future price from the current price
-  sell_profit = lambda current, pred_future, true_future: current - true_future if pred_future < current else 0
-  X_test = data["X_test"]
-  y_test = data["y_test"]
-  # perform prediction and get prices
-  y_pred = model.predict(X_test)
-  if SCALE:
-    y_test = np.squeeze(data["column_scaler"]["adjclose"].inverse_transform(np.expand_dims(y_test, axis=0)))
-    y_pred = np.squeeze(data["column_scaler"]["adjclose"].inverse_transform(y_pred))
-  test_df = data["test_df"]
-  # add predicted future prices to the dataframe
-  test_df[f"adjclose_{LOOKUP_STEP}"] = y_pred
-  # add true future prices to the dataframe
-  test_df[f"true_adjclose_{LOOKUP_STEP}"] = y_test
-  # sort the dataframe by date
-  test_df.sort_index(inplace=True)
-  final_df = test_df
-  # add the buy profit column
-  final_df["buy_profit"] = list(map(buy_profit, final_df["adjclose"], final_df[f"adjclose_{LOOKUP_STEP}"], final_df[f"true_adjclose_{LOOKUP_STEP}"]))
-  # add the sell profit column
-  final_df["sell_profit"] = list(map(sell_profit, final_df["adjclose"], final_df[f"adjclose_{LOOKUP_STEP}"], final_df[f"true_adjclose_{LOOKUP_STEP}"]))
-  return final_df
-
 def predict(model, data):
   # retrieve the last sequence from data
   last_sequence = data["last_sequence"][-N_STEPS:]
@@ -248,22 +184,10 @@ def price_future():
   model = create_model(N_STEPS, len(FEATURE_COLUMNS), loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS, dropout=DROPOUT, optimizer=OPTIMIZER, bidirectional=BIDIRECTIONAL)
   model.load_weights(model_path)
 
-  data_ticker = load_data(ticker, n_steps=N_STEPS, split_by_date=SPLIT_BY_DATE, lookup_step=LOOKUP_STEP)
-  final_data = get_final_df(model, data_ticker)
+  data_ticker = load_data(ticker, n_steps=N_STEPS, split_by_date=SPLIT_BY_DATE, lookup_step=LOOKUP_STEP)  
 
-  future_price = float(predict(model, data_ticker))
-  accuracy_score = float((len(final_data[final_data['sell_profit'] > 0]) + len(final_data[final_data['buy_profit'] > 0])) / len(final_data))
-  total_buy_profit  = float(final_data["buy_profit"].sum())
-  total_sell_profit = float(final_data["sell_profit"].sum())
-  total_profit = float(total_buy_profit + total_sell_profit)
-  profit_per_trade = float(total_profit / len(final_data))
+  future_price = float(predict(model, data_ticker))  
 
   return jsonify({
-    'future_price' : future_price,
-    'number_days' : LOOKUP_STEP,
-    'accuracy' : accuracy_score,
-    'buy_profit' : total_buy_profit,
-    'sell_profit' : total_sell_profit,
-    'total_profit' : total_profit,
-    'profit_trade' : profit_per_trade
+    'future_price' : future_price    
   })
