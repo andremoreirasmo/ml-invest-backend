@@ -45,7 +45,7 @@ export class StockService {
     return yahooFinance._chart(ticker, {
       period1: PeriodUtil.getPeriod(period),
       interval: PeriodUtil.getInterval(period),
-      lang: 'pt-BR',
+      includePrePost: false,
     });
   }
 
@@ -56,23 +56,24 @@ export class StockService {
       },
     });
 
-    const promiseSummary = yahooFinance.quoteSummary(result.ticker, {
+    const promiseSummary = await yahooFinance.quoteSummary(result.ticker, {
       modules: [
         'assetProfile',
+        'summaryDetail',
         'price',
+        'summaryProfile',
         'summaryDetail',
-        'summaryDetail',
-        'financialData',
-        'fundProfile',
+        'quoteType',
       ],
     });
 
-    const promiseChart = this.getChart(result.ticker, period);
+    const promiseChart = this.getChart('PBR', period);
 
-    // eslint-disable-next-line prefer-const
-    let [summary, chart] = await Promise.all([promiseSummary, promiseChart]);
+    const promises = await Promise.all([promiseSummary, promiseChart]);
 
+    let summary = promises[0];
     const price = summary.price;
+    const chart = promises[1];
 
     summary = {
       ...summary,
