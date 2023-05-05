@@ -1,5 +1,6 @@
 import os
 import random
+from datetime import date, timedelta, datetime
 
 import numpy as np
 import pandas as pd
@@ -12,6 +13,11 @@ from yahoo_fin import stock_info as si
 from collections import deque
 
 from flask import Flask, jsonify, request
+
+# set seed, so we can get the same results after rerunning several times
+np.random.seed(314)
+tf.random.set_seed(314)
+random.seed(314)
 
 # Window size or the sequence length
 N_STEPS = 50
@@ -40,10 +46,11 @@ BIDIRECTIONAL = False
 # huber loss
 LOSS = "huber_loss"
 
-# set seed, so we can get the same results after rerunning several times
-np.random.seed(314)
-tf.random.set_seed(314)
-random.seed(314)
+# create these folders if they does not exist
+if not os.path.isdir("archives"):
+  os.mkdir("archives")
+if not os.path.isdir("archives/results"):
+  os.mkdir("archives/results")
 
 def shuffle_in_unison(a, b):
   # shuffle two arrays in the same way
@@ -66,10 +73,20 @@ def load_data(ticker, n_steps=50, scale=True, lookup_step=1, feature_columns=['a
     test_size (float): ratio for test data, default is 0.2 (20% testing data)
     feature_columns (list): the list of features to use to feed into the model, default is everything grabbed from yahoo_fin
   """
+
+  # current date
+  date_end = date.today()
+  # start date
+  date_start = date_end - timedelta(1825)
+
+  # format date
+  date_start = datetime.strftime(date_start, '%m/%d/%Y')
+  date_end = datetime.strftime(date_end, '%m/%d/%Y')
+
   # see if ticker is already a loaded stock from yahoo finance
   if isinstance(ticker, str):
     # load it from yahoo_fin library
-    df = si.get_data(ticker)
+    df = si.get_data(ticker, start_date=date_start, end_date=date_end)
   elif isinstance(ticker, pd.DataFrame):
     # already loaded, use it directly
     df = ticker
@@ -141,12 +158,6 @@ def create_model(sequence_length, n_features, units=256, cell=LSTM, n_layers=2, 
     model.add(Dropout(dropout))
   model.add(Dense(1, activation="linear"))
   return model
-
-# create these folders if they does not exist
-if not os.path.isdir("archives"):
-  os.mkdir("archives")
-if not os.path.isdir("archives/results"):
-  os.mkdir("archives/results")
 
 def predict(model, data):
   # retrieve the last sequence from data
