@@ -56,7 +56,7 @@ export class StockService {
       },
     });
 
-    const promiseSummary = await yahooFinance.quoteSummary(result.ticker, {
+    let summary = await yahooFinance.quoteSummary(result.ticker, {
       modules: [
         'assetProfile',
         'summaryDetail',
@@ -67,13 +67,8 @@ export class StockService {
       ],
     });
 
-    const promiseChart = this.getChart('PBR', period);
-
-    const promises = await Promise.all([promiseSummary, promiseChart]);
-
-    let summary = promises[0];
     const price = summary.price;
-    const chart = promises[1];
+    const chart = await this.getChart(result.ticker, period);
 
     summary = {
       ...summary,
