@@ -1,79 +1,60 @@
-import { add, startOfDay } from 'date-fns';
-
-export type IntervalType =
-  | '1m'
-  | '2m'
-  | '5m'
-  | '15m'
-  | '30m'
-  | '60m'
-  | '90m'
-  | '1h'
-  | '1d'
-  | '5d'
-  | '1wk'
-  | '1mo'
-  | '3mo';
-
 export enum PeriodEnum {
-  OneDay,
-  OneWeek,
-  OneMonth,
-  OneYear,
-  FiveYears,
-  Max,
+  oneDay,
+  fiveDays,
+  oneMonth,
+  oneYear,
+  fiveYears,
+  max,
 }
 
 export type keyofPeriodEnum = keyof typeof PeriodEnum;
 
 export class PeriodUtil {
-  static getInterval(e: PeriodEnum): IntervalType {
+  static getInterval(e: PeriodEnum): string {
     switch (e) {
-      case PeriodEnum.OneDay:
-        return '5m';
+      case PeriodEnum.oneDay:
+        return '1m';
 
-      case PeriodEnum.OneWeek:
-        return '90m';
+      case PeriodEnum.fiveDays:
+        return '60m';
 
-      case PeriodEnum.OneMonth:
+      case PeriodEnum.oneMonth:
         return '1d';
 
-      case PeriodEnum.OneYear:
+      case PeriodEnum.oneYear:
         return '1wk';
 
-      case PeriodEnum.FiveYears:
+      case PeriodEnum.fiveYears:
+      case PeriodEnum.max:
         return '1mo';
 
-      case PeriodEnum.Max:
-        return '3mo';
-
       default:
-        return '1h';
+        return '60m';
     }
   }
 
-  static getPeriod(e: PeriodEnum): Date {
+  static getRange(e: PeriodEnum): string {
     switch (e) {
-      case PeriodEnum.OneDay:
-        return startOfDay(new Date());
+      case PeriodEnum.oneDay:
+        return '1d';
 
-      case PeriodEnum.OneWeek:
-        return add(new Date(), { days: -7 });
+      case PeriodEnum.fiveDays:
+        return '5d';
 
-      case PeriodEnum.OneMonth:
-        return add(new Date(), { months: -1 });
+      case PeriodEnum.oneMonth:
+        return '1mo';
 
-      case PeriodEnum.OneYear:
-        return add(new Date(), { years: -1 });
+      case PeriodEnum.oneYear:
+        return '1y';
 
-      case PeriodEnum.FiveYears:
-        return add(new Date(), { years: -5 });
+      case PeriodEnum.fiveYears:
+        return '5y';
 
-      case PeriodEnum.Max:
-        return add(new Date(), { years: -999 });
+      case PeriodEnum.max:
+        return 'max';
 
       default:
-        return new Date();
+        return '1d';
     }
   }
 }

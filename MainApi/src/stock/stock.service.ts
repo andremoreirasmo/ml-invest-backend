@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Stock } from '@prisma/client';
+import axios from 'axios';
 import { PrismaService } from 'src/prisma.service';
 import yahooFinance from 'yahoo-finance2';
 import { CreateStockDto } from './dto/create-stock.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
+import { ChartYahooRoot } from './model/chart-yahoo.model';
 import { PeriodEnum, PeriodUtil } from './model/stock-chart.model';
 
 @Injectable()
@@ -42,11 +44,33 @@ export class StockService {
   }
 
   async getChart(ticker: string, period: PeriodEnum) {
-    return yahooFinance._chart(ticker, {
-      period1: PeriodUtil.getPeriod(period),
-      interval: PeriodUtil.getInterval(period),
-      includePrePost: false,
-    });
+    const options = {
+      method: 'GET',
+      url: 'https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v3/get-chart',
+      params: {
+        interval: PeriodUtil.getInterval(period),
+        symbol: ticker,
+        range: PeriodUtil.getRange(period),
+        region: 'br',
+        includePrePost: 'false',
+        useYfid: 'true',
+      },
+      headers: {
+        'X-RapidAPI-Key': process.env.API_KEY_RAPID,
+      },
+    };
+
+    const response = await axios.request<ChartYahooRoot>(options);
+    const chart = response.data.chart.result[0];
+
+    return chart.timestamp.map((utcSeconds, i) => ({
+      date: new Date(utcSeconds * 1000),
+      high: chart.indicators.quote[0].high[i],
+      close: chart.indicators.quote[0].close[i],
+      volume: chart.indicators.quote[0].volume[i],
+      open: chart.indicators.quote[0].open[i],
+      low: chart.indicators.quote[0].low[i],
+    }));
   }
 
   async findOne(id: number, period: PeriodEnum) {
@@ -56,7 +80,7 @@ export class StockService {
       },
     });
 
-    let summary = await yahooFinance.quoteSummary(result.ticker, {
+    const promiseSummary = yahooFinance.quoteSummary(result.ticker, {
       modules: [
         'assetProfile',
         'summaryDetail',
@@ -67,8 +91,13 @@ export class StockService {
       ],
     });
 
+    const promiseChart = this.getChart(result.ticker, period);
+
+    const results = await Promise.all([promiseSummary, promiseChart]);
+
+    let summary = results[0];
+    const chart = results[1];
     const price = summary.price;
-    const chart = await this.getChart(result.ticker, period);
 
     summary = {
       ...summary,
