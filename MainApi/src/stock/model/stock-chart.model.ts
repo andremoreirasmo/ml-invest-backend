@@ -13,7 +13,7 @@ export class PeriodUtil {
   static getInterval(e: PeriodEnum): string {
     switch (e) {
       case PeriodEnum.oneDay:
-        return '1m';
+        return '15m';
 
       case PeriodEnum.fiveDays:
         return '60m';
