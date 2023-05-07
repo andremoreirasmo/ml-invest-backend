@@ -1,6 +1,6 @@
 import os
 import random
-from datetime import date, timedelta, datetime
+from datetime import date, datetime
 
 import numpy as np
 import pandas as pd
@@ -51,6 +51,8 @@ if not os.path.isdir("archives"):
   os.mkdir("archives")
 if not os.path.isdir("archives/results"):
   os.mkdir("archives/results")
+if not os.path.isdir("archives/data"):
+  os.mkdir("archives/data")
 
 def shuffle_in_unison(a, b):
   # shuffle two arrays in the same way
@@ -76,17 +78,30 @@ def load_data(ticker, n_steps=50, scale=True, lookup_step=1, feature_columns=['a
 
   # current date
   date_end = date.today()
-  # start date
-  date_start = date_end - timedelta(1825)
 
   # format date
-  date_start = datetime.strftime(date_start, '%m/%d/%Y')
   date_end = datetime.strftime(date_end, '%m/%d/%Y')
 
   # see if ticker is already a loaded stock from yahoo finance
   if isinstance(ticker, str):
+    # load from csv file
+    archive = 'archives/data/' + ticker + '.csv'
+    df_csv = pd.read_csv(archive, index_col=0)
+    # gets the latest date from the file and converts it to the format of the yahoo_fin library
+    recent_date = df_csv.index[-1]
+    recent_date = datetime.strptime(recent_date, '%Y-%m-%d')
+    recent_date = datetime.strftime(recent_date, '%m/%d/%Y')
     # load it from yahoo_fin library
-    df = si.get_data(ticker, start_date=date_start, end_date=date_end)
+    df_new_data = si.get_data(ticker, start_date=recent_date, end_date=date_end)
+    # gets the latest date from the yahoo_fin library and converts
+    datetime_new = df_new_data.index[-1]
+    datetime_new = str(datetime_new.date())
+    # converts to the same format as datetime_new
+    recent_date = datetime.strftime(datetime.strptime(recent_date, '%m/%d/%Y'), '%Y-%m-%d')
+    if datetime_new == recent_date:
+      df = df_csv
+    else:
+      df = pd.concat([df_csv,df_new_data])
   elif isinstance(ticker, pd.DataFrame):
     # already loaded, use it directly
     df = ticker
