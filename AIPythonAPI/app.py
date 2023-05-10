@@ -89,19 +89,19 @@ def load_data(ticker, n_steps=50, scale=True, lookup_step=1, feature_columns=['a
     df_csv = pd.read_csv(archive, index_col=0)
     # gets the latest date from the file and converts it to the format of the yahoo_fin library
     recent_date = df_csv.index[-1]
-    recent_date = datetime.strptime(recent_date, '%Y-%m-%d')
-    recent_date = datetime.strftime(recent_date, '%m/%d/%Y')
+    recent_date = datetime.strftime(datetime.strptime(recent_date, '%Y-%m-%d'), '%m/%d/%Y')
     # load it from yahoo_fin library
     df_new_data = si.get_data(ticker, start_date=recent_date, end_date=date_end)
     # gets the latest date from the yahoo_fin library and converts
-    datetime_new = df_new_data.index[-1]
-    datetime_new = str(datetime_new.date())
+    datetime_new = df_new_data.index[-1].date()
     # converts to the same format as datetime_new
     recent_date = datetime.strftime(datetime.strptime(recent_date, '%m/%d/%Y'), '%Y-%m-%d')
     if datetime_new == recent_date:
       df = df_csv
     else:
+      df_new_data.drop(index=recent_date, inplace=True)
       df = pd.concat([df_csv,df_new_data])
+      df.dropna(axis=0, inplace=True)
   elif isinstance(ticker, pd.DataFrame):
     # already loaded, use it directly
     df = ticker
