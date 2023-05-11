@@ -10,6 +10,9 @@ COPY package*.json yarn.lock ./
 # Install dependencies
 RUN yarn install --production
 
+# Build
+RUN yarn build
+
 # Copy application code
 COPY . .
 
