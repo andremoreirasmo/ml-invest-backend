@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json yarn.lock ./
 
 # Install dependencies
-RUN yarn install --production
+RUN yarn install
 
 # Build
 RUN yarn build
