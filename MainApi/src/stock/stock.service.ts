@@ -67,6 +67,7 @@ export class StockService {
   }
 
   async findOne(id: number, period: PeriodEnum) {
+    Logger.log('findOne');
     const result = await this.prisma.stock.findUnique({
       where: {
         id,
