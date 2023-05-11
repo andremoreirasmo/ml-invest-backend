@@ -10,6 +10,8 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install --production
 
+RUN npm run build
+
 # Copy the rest of the application code
 COPY . .
 
