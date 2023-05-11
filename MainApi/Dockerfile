@@ -1,28 +1,20 @@
-# build
-FROM node:18-alpine AS builder
+# Base image
+FROM node:14-alpine
+
+# Set working directory
 WORKDIR /app
 
-COPY package*.json ./
+# Copy package.json and yarn.lock
+COPY package*.json yarn.lock ./
 
-RUN yarn install
+# Install dependencies
+RUN yarn install --production
 
+# Copy application code
 COPY . .
 
-RUN yarn build
-
-# Release
-FROM node:18-alpine
-WORKDIR /app
-
-# Env vars
-ENV NODE_ENV=production
-
-# Copy
-COPY --from=builder /app/package.json /app/
-COPY --from=builder /app/node_modules /app/node_modules
-COPY --from=builder /app/dist /app/dist
-
-# run
-USER node
+# Expose port (change it if your Nest.js app is running on a different port)
 EXPOSE 3000
-CMD ["node", "dist/main"]
+
+# Run the application
+CMD ["yarn", "start:prod"]
