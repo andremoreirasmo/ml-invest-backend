@@ -10,7 +10,6 @@ export class StockService {
   constructor(private prisma: PrismaService) {}
 
   async findAll() {
-    console.log('findAll');
     Logger.log('findAll');
     const result = await this.prisma.stock.findMany();
 
