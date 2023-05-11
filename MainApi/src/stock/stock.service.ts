@@ -1,46 +1,40 @@
-import { Injectable } from '@nestjs/common';
-import { Stock } from '@prisma/client';
+import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import { PrismaService } from 'src/prisma.service';
 import yahooFinance from 'yahoo-finance2';
-import { CreateStockDto } from './dto/create-stock.dto';
-import { UpdateStockDto } from './dto/update-stock.dto';
 import { ChartYahooRoot } from './model/chart-yahoo.model';
-import { PeriodEnum, PeriodUtil } from './model/stock-chart.model';
+import { PeriodEnum, PeriodUtil } from './model/enums/stock-chart.enum';
 
 @Injectable()
 export class StockService {
   constructor(private prisma: PrismaService) {}
 
-  create(createStockDto: CreateStockDto): Promise<Stock> {
-    return this.prisma.stock.create({
-      data: {
-        ...createStockDto,
-      },
-    });
-  }
-
   async findAll() {
-    //Read AI data
+    console.log('findAll');
+    Logger.log('findAll');
     const result = await this.prisma.stock.findMany();
 
-    const summarys = await Promise.all(
+    const summaries = await Promise.all(
       result.map((stock) =>
         yahooFinance.quoteSummary(stock.ticker, {
-          modules: ['price'],
+          modules: ['price', 'quoteType'],
         }),
       ),
     );
 
     const mapSummary = new Map(
-      summarys.map((summary) => [summary.price.symbol, summary]),
+      summaries.map((summary) => [summary.quoteType.symbol, summary]),
     );
 
-    return result.map((stock) => ({
-      ...stock,
-      stockStatus: 0,
-      summary: { ...mapSummary.get(stock.ticker) },
-    }));
+    return result.map((stock) => {
+      const summary = mapSummary.get(stock.ticker);
+
+      Logger.log('Stock', [stock, summary]);
+      return {
+        ...stock,
+        summary: { ...summary },
+      };
+    });
   }
 
   async getChart(ticker: string, period: PeriodEnum) {
@@ -109,24 +103,5 @@ export class StockService {
     };
 
     return { ...result, stockStatus: 0, summary, chart };
-  }
-
-  update(id: number, updateStockDto: UpdateStockDto): Promise<Stock> {
-    return this.prisma.stock.update({
-      data: {
-        ...updateStockDto,
-      },
-      where: {
-        id,
-      },
-    });
-  }
-
-  remove(id: number): Promise<Stock> {
-    return this.prisma.stock.delete({
-      where: {
-        id,
-      },
-    });
   }
 }

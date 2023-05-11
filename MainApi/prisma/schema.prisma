@@ -6,14 +6,17 @@ generator client {
 }
 
 datasource db {
-  provider          = "postgresql"
-  url               = env("DATABASE_URL")
-  directUrl         = env("DIRECT_URL")
-  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  provider = "cockroachdb"
+  url      = env("DATABASE_URL")
+}
+
+model SystemInfo {
+  id                 Int      @id
+  trend_refresh_time DateTime
 }
 
 model User {
-  id             Int              @id @default(autoincrement())
+  id             String           @id @default(uuid())
   email          String           @unique
   name           String
   password       String
@@ -21,26 +24,27 @@ model User {
 }
 
 model Stock {
-  id                     Int                      @id @default(autoincrement())
+  id                     Int                      @id
   name                   String                   @unique
   image                  String
   ticker                 String
+  future_price           Float
   CompareHistoryRelation CompareHistoryRelation[]
 }
 
 model CompareHistoryRelation {
-  id                Int            @id @default(autoincrement())
-  compareHistory_id Int
+  id                String         @id @default(uuid())
+  compareHistory_id String
   compareHistory    CompareHistory @relation(fields: [compareHistory_id], references: [id])
   stock_id          Int
   stock             Stock          @relation(fields: [stock_id], references: [id])
 }
 
 model CompareHistory {
-  id                     Int                      @id @default(autoincrement())
-  stock_id               Int
+  id                     String                   @id @default(uuid())
+  stock_id               String
   user                   User                     @relation(fields: [userId], references: [id])
   createdAt              DateTime                 @default(now())
-  userId                 Int
+  userId                 String
   CompareHistoryRelation CompareHistoryRelation[]
 }
