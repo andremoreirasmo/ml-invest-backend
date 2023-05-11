@@ -1,4 +1,4 @@
-export interface ChartYahooRoot {
+export interface ChartYahooDTO {
   chart: Chart;
 }
 

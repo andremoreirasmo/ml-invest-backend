@@ -1,11 +1,17 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Logger, Param, Query } from '@nestjs/common';
 
+import { ChartStockService } from './chart-stock.service';
 import { keyofPeriodEnum, PeriodEnum } from './model/enums/stock-chart.enum';
 import { StockService } from './stock.service';
+import { TrendStockService } from './trend-stock.service';
 
 @Controller('stock')
 export class StockController {
-  constructor(private readonly stockService: StockService) {}
+  constructor(
+    private stockService: StockService,
+    private chartStockService: ChartStockService,
+    private trendStockService: TrendStockService,
+  ) {}
 
   @Get()
   findAll() {
@@ -14,6 +20,7 @@ export class StockController {
 
   @Get(':id')
   findOne(@Param('id') id: string, @Query('period') period: keyofPeriodEnum) {
+    Logger.log('findOne');
     return this.stockService.findOne(+id, PeriodEnum[period]);
   }
 
@@ -22,6 +29,13 @@ export class StockController {
     @Param('ticker') ticker: string,
     @Query('period') period: keyofPeriodEnum,
   ) {
-    return this.stockService.getChart(ticker, PeriodEnum[period]);
+    Logger.log('getChart');
+    return this.chartStockService.getChart(ticker, PeriodEnum[period]);
+  }
+
+  @Get('trend-stock/refreshData')
+  refreshDataFuturePrice() {
+    Logger.log('trend-stock/refreshData');
+    return this.trendStockService.refreshData();
   }
 }

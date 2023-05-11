@@ -4,6 +4,6 @@ import { StockComparisonController } from './stock-comparison.controller';
 
 @Module({
   controllers: [StockComparisonController],
-  providers: [StockComparisonService]
+  providers: [StockComparisonService],
 })
 export class StockComparisonModule {}

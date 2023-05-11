@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
+process.env.TZ = 'America/Sao_Paulo';
 declare const module: any;
 
 async function bootstrap() {
@@ -13,3 +14,4 @@ async function bootstrap() {
   }
 }
 bootstrap();
+console.log(new Date());

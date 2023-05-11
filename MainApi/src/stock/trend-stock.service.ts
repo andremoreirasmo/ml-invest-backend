@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import { PrismaService } from 'src/prisma.service';
-import { TrendStockRequest } from './dto/TrendStockRequest';
+import { TrendStockRequestDTO } from './model/dto/TrendStockRequest.dto';
+import { TrendStockEnum } from './model/enums/trend-stock.enum';
 
 @Injectable()
 export class TrendStockService {
@@ -11,13 +12,9 @@ export class TrendStockService {
     const stocks = await this.prisma.stock.findMany();
 
     for (const stock of stocks) {
-      Logger.log(
-        `refreshing ${stock.ticker}, API: ${
-          process.env.API_URL_TREND + '/metrics'
-        }`,
-      );
+      Logger.log(`refreshing ${stock.ticker} `);
 
-      const response = await axios.get<TrendStockRequest>(
+      const response = await axios.get<TrendStockRequestDTO>(
         process.env.API_URL_TREND + '/metrics',
         {
           params: {
@@ -49,5 +46,18 @@ export class TrendStockService {
       update: { trend_refresh_time },
       where: { id: 1 },
     });
+  }
+
+  getTrendStock(stockPrice: number, futurePrice: number): TrendStockEnum {
+    const diff = futurePrice - stockPrice;
+    const percentVariable = (diff / stockPrice) * 100;
+
+    if (percentVariable > 1) {
+      return TrendStockEnum.up;
+    } else if (percentVariable < -1) {
+      return TrendStockEnum.down;
+    }
+
+    return TrendStockEnum.flat;
   }
 }

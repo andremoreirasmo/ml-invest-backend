@@ -11,7 +11,9 @@ describe('StockComparisonController', () => {
       providers: [StockComparisonService],
     }).compile();
 
-    controller = module.get<StockComparisonController>(StockComparisonController);
+    controller = module.get<StockComparisonController>(
+      StockComparisonController,
+    );
   });
 
   it('should be defined', () => {
