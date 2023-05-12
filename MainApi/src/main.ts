@@ -14,4 +14,3 @@ async function bootstrap() {
   }
 }
 bootstrap();
-console.log(new Date());
