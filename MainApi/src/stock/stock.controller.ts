@@ -33,9 +33,9 @@ export class StockController {
     return this.chartStockService.getChart(ticker, PeriodEnum[period]);
   }
 
-  @Get('trend-stock/refreshData')
+  @Get('trend/refreshData')
   refreshDataFuturePrice() {
-    Logger.log('trend-stock/refreshData');
+    Logger.log('trendrefreshData');
     return this.trendStockService.refreshData();
   }
 }
