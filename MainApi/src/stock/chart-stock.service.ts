@@ -25,6 +25,10 @@ export class ChartStockService {
     const response = await axios.request<ChartYahooDTO>(options);
     const chart = response.data.chart.result[0];
 
+    if (!chart.timestamp) {
+      return [];
+    }
+
     return chart.timestamp.map((utcSeconds, i) => ({
       date: new Date(utcSeconds * 1000),
       high: chart.indicators.quote[0].high[i],
