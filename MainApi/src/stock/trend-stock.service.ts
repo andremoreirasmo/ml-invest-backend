@@ -60,4 +60,12 @@ export class TrendStockService {
 
     return TrendStockEnum.flat;
   }
+
+  async getLastRefreshTrend() {
+    const system = await this.prisma.systemInfo.findUnique({
+      where: { id: 1 },
+    });
+
+    return { date: system.trend_refresh_time };
+  }
 }

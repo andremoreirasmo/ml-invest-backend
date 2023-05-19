@@ -35,7 +35,13 @@ export class StockController {
 
   @Get('trend/refreshData')
   refreshDataFuturePrice() {
-    Logger.log('trendrefreshData');
+    Logger.log('refreshDataFuturePrice');
     return this.trendStockService.refreshData();
+  }
+
+  @Get('trend/lastRefresh')
+  getLastRefreshTrend() {
+    Logger.log('getLastRefreshTrend');
+    return this.trendStockService.getLastRefreshTrend();
   }
 }
