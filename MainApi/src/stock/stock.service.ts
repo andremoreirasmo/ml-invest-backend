@@ -66,11 +66,7 @@ export class StockService {
 
     const promiseChart = this.chartStockService.getChart(stock.ticker, period);
 
-    
-    const results = await Promise.all([
-      promiseSummary,
-      promiseChart,
-    ]);
+    const results = await Promise.all([promiseSummary, promiseChart]);
 
     let summary = results[0];
     const chart = results[1];
