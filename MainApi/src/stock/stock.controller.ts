@@ -1,4 +1,4 @@
-import { Controller, Get, Logger, Param, Query } from '@nestjs/common';
+import { Controller, Get, Logger, Query } from '@nestjs/common';
 
 import { ChartStockService } from './chart-stock.service';
 import { keyofPeriodEnum, PeriodEnum } from './model/enums/stock-chart.enum';
@@ -18,19 +18,30 @@ export class StockController {
     return this.stockService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string, @Query('period') period: keyofPeriodEnum) {
-    Logger.log('findOne');
-    return this.stockService.findOne(+id, PeriodEnum[period]);
-  }
-
-  @Get('chart/:ticker')
-  getChart(
-    @Param('ticker') ticker: string,
+  @Get('find')
+  findStock(
+    @Query('ticker') tickers: string | string[],
     @Query('period') period: keyofPeriodEnum,
   ) {
-    Logger.log('getChart');
-    return this.chartStockService.getChart(ticker, PeriodEnum[period]);
+    Logger.log(`findStock  ${JSON.stringify(tickers)}`);
+    if (typeof tickers === 'string') {
+      return this.stockService.findOne(tickers, PeriodEnum[period]);
+    }
+
+    return this.stockService.findStocks(tickers, PeriodEnum[period]);
+  }
+
+  @Get('chart')
+  getChart(
+    @Query('ticker') tickers: string | string[],
+    @Query('period') period: keyofPeriodEnum,
+  ) {
+    Logger.log(`getChart ${JSON.stringify(tickers)}`);
+    if (typeof tickers === 'string') {
+      return this.chartStockService.getChart(tickers, PeriodEnum[period]);
+    }
+
+    return this.chartStockService.getCharts(tickers, PeriodEnum[period]);
   }
 
   @Get('trend/refreshData')

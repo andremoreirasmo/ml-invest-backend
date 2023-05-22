@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-loss-of-precision */
 import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from 'src/prisma.service';
@@ -45,10 +46,10 @@ export class StockService {
     });
   }
 
-  async findOne(id: number, period: PeriodEnum) {
-    const stock = await this.prisma.stock.findUnique({
+  async findOne(ticker: string, period: PeriodEnum) {
+    const stock = await this.prisma.stock.findFirst({
       where: {
-        id,
+        ticker,
       },
     });
 
@@ -65,7 +66,11 @@ export class StockService {
 
     const promiseChart = this.chartStockService.getChart(stock.ticker, period);
 
-    const results = await Promise.all([promiseSummary, promiseChart]);
+    
+    const results = await Promise.all([
+      promiseSummary,
+      promiseChart,
+    ]);
 
     let summary = results[0];
     const chart = results[1];
@@ -86,5 +91,13 @@ export class StockService {
     );
 
     return { ...stock, trendStock, summary, chart };
+  }
+
+  async findStocks(tickers: string[], period: PeriodEnum) {
+    const stocks = await Promise.all(
+      tickers.map((ticker) => this.findOne(ticker, period)),
+    );
+
+    return stocks;
   }
 }
