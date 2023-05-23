@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-loss-of-precision */
 import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from 'src/prisma.service';
