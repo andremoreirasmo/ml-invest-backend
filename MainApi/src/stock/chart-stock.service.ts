@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { ChartYahooDTO } from './model/dto/chart-yahoo.dto';
 import { PeriodEnum, PeriodUtil } from './model/enums/stock-chart.enum';
 
 @Injectable()
 export class ChartStockService {
-  async getChart(ticker: string, period: PeriodEnum) {
+  async getChart(ticker: string, period: PeriodEnum, apiKey?: string) {
     try {
       const options = {
         method: 'GET',
@@ -19,7 +19,7 @@ export class ChartStockService {
           useYfid: 'true',
         },
         headers: {
-          'X-RapidAPI-Key': process.env.API_KEY_RAPID,
+          'X-RapidAPI-Key': apiKey ?? process.env.API_KEY_RAPID,
         },
       };
 
@@ -39,6 +39,9 @@ export class ChartStockService {
         low: chart.indicators.quote[0].low[i],
       }));
     } catch (error) {
+      if (error instanceof AxiosError && apiKey == undefined) {
+        return this.getChart(ticker, period, process.env.API_KEY_RAPID_2);
+      }
       Logger.error('Erro ao localizar os gráficos', error);
       return [];
     }
