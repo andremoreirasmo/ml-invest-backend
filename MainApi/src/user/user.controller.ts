@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Logger,
   Param,
   Patch,
   Post,
@@ -23,21 +24,25 @@ export class UserController {
   @Public()
   @Post('/signup')
   create(@Body() createUserDto: CreateUserDto) {
+    Logger.log('user signup');
     return this.userService.create(createUserDto);
   }
 
   @Get('')
   findOne(@Request() req: any) {
+    Logger.log('user findOne');
     return this.userService.findByIdToReturn(req.user.id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    Logger.log('user update');
     return this.userService.update(id, updateUserDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
+    Logger.log('user remove');
     return this.userService.remove(id);
   }
 }
