@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-import { StockComparisonService } from './stock-comparison.service';
+import { PrismaService } from 'src/prisma.service';
 import { StockComparisonController } from './stock-comparison.controller';
+import { StockComparisonService } from './stock-comparison.service';
 
 @Module({
   controllers: [StockComparisonController],
-  providers: [StockComparisonService],
+  providers: [StockComparisonService, PrismaService],
 })
 export class StockComparisonModule {}

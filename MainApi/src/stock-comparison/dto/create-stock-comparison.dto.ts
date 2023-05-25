@@ -1,1 +1,3 @@
-export class CreateStockComparisonDto {}
+export class CreateStockComparisonDto {
+  stocks: number[];
+}

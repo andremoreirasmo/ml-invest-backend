@@ -1,26 +1,37 @@
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from 'src/prisma.service';
 import { CreateStockComparisonDto } from './dto/create-stock-comparison.dto';
-import { UpdateStockComparisonDto } from './dto/update-stock-comparison.dto';
 
 @Injectable()
 export class StockComparisonService {
-  create(createStockComparisonDto: CreateStockComparisonDto) {
-    return 'This action adds a new stockComparison';
+  constructor(private prisma: PrismaService) {}
+
+  create(userId: string, createStockComparisonDto: CreateStockComparisonDto) {
+    return this.prisma.compareHistory.create({
+      data: {
+        userId,
+        CompareHistoryRelation: {
+          create: createStockComparisonDto.stocks.map((stock) => ({
+            stock_id: stock,
+          })),
+        },
+      },
+    });
   }
 
-  findAll() {
-    return `This action returns all stockComparison`;
-  }
+  async findAll(userId: string) {
+    const result = await this.prisma.compareHistory.findMany({
+      include: { CompareHistoryRelation: { include: { stock: true } } },
+      where: { userId },
+    });
 
-  findOne(id: number) {
-    return `This action returns a #${id} stockComparison`;
-  }
-
-  update(id: number, updateStockComparisonDto: UpdateStockComparisonDto) {
-    return `This action updates a #${id} stockComparison`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} stockComparison`;
+    return result.map((history) => {
+      return {
+        createdAt: history.createdAt,
+        stocks: history.CompareHistoryRelation.map(
+          (relation) => relation.stock,
+        ),
+      };
+    });
   }
 }
