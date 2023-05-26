@@ -27,11 +27,18 @@ export class StockComparisonService {
 
     return result.map((history) => {
       return {
+        id: history.id,
         createdAt: history.createdAt,
         stocks: history.CompareHistoryRelation.map(
           (relation) => relation.stock,
         ),
       };
+    });
+  }
+  remove(id: string) {
+    return this.prisma.compareHistory.delete({
+      where: { id },
+      include: { CompareHistoryRelation: true },
     });
   }
 }

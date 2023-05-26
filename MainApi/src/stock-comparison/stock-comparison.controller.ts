@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  Logger,
+  Param,
   Post,
   Request,
   UseGuards,
@@ -22,6 +25,7 @@ export class StockComparisonController {
     @Request() req: any,
     @Body() createStockComparisonDto: CreateStockComparisonDto,
   ) {
+    Logger.log('StockComparisonController create');
     return this.stockComparisonService.create(
       req.user.id,
       createStockComparisonDto,
@@ -30,6 +34,13 @@ export class StockComparisonController {
 
   @Get()
   findAll(@Request() req: any) {
+    Logger.log('StockComparisonController findAll');
     return this.stockComparisonService.findAll(req.user.id);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    Logger.log('StockComparisonController remove');
+    return this.stockComparisonService.remove(id);
   }
 }
