@@ -36,14 +36,14 @@ model Stock {
 model CompareHistoryRelation {
   id                String         @id @default(uuid())
   compareHistory_id String
-  compareHistory    CompareHistory @relation(fields: [compareHistory_id], references: [id])
+  compareHistory    CompareHistory @relation(fields: [compareHistory_id], references: [id], onDelete: Cascade)
   stock_id          Int
   stock             Stock          @relation(fields: [stock_id], references: [id])
 }
 
 model CompareHistory {
   id                     String                   @id @default(uuid())
-  user                   User                     @relation(fields: [userId], references: [id])
+  user                   User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt              DateTime                 @default(now())
   userId                 String
   CompareHistoryRelation CompareHistoryRelation[]
