@@ -3,7 +3,6 @@ import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -46,13 +45,6 @@ export class UserService {
       where: {
         email,
       },
-    });
-  }
-
-  update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    return this.prisma.user.update({
-      where: { id },
-      data: { ...updateUserDto },
     });
   }
 

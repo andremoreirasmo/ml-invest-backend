@@ -4,8 +4,6 @@ import {
   Delete,
   Get,
   Logger,
-  Param,
-  Patch,
   Post,
   Request,
   UseGuards,
@@ -13,7 +11,6 @@ import {
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { Public } from 'src/auth/public.decorator';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
 
 @Controller('user')
@@ -34,15 +31,9 @@ export class UserController {
     return this.userService.findByIdToReturn(req.user.id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    Logger.log('user update');
-    return this.userService.update(id, updateUserDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
+  @Delete()
+  remove(@Request() req: any) {
     Logger.log('user remove');
-    return this.userService.remove(id);
+    return this.userService.remove(req.user.id);
   }
 }
