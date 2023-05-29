@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios, { AxiosError } from 'axios';
+import { ChartModel, ChartQuotes } from './model/chart.model';
 import { ChartYahooDTO, Result } from './model/dto/chart-yahoo.dto';
 import { PeriodEnum, PeriodUtil } from './model/enums/stock-chart.enum';
 
@@ -23,7 +24,11 @@ export class ChartStockService {
     };
   }
 
-  async getChart(ticker: string, period: PeriodEnum, apiKey?: string) {
+  async getChart(
+    ticker: string,
+    period: PeriodEnum,
+    apiKey?: string,
+  ): Promise<ChartQuotes[]> {
     try {
       const options = this.getOptions(ticker, period, apiKey);
 
@@ -39,7 +44,7 @@ export class ChartStockService {
     }
   }
 
-  private parseChart(chart: Result) {
+  private parseChart(chart: Result): ChartQuotes[] {
     if (!chart.timestamp) {
       return [];
     }
@@ -53,7 +58,11 @@ export class ChartStockService {
     }));
   }
 
-  async getCharts(tickers: string[], period: PeriodEnum, apiKey?: string) {
+  async getCharts(
+    tickers: string[],
+    period: PeriodEnum,
+    apiKey?: string,
+  ): Promise<ChartModel[]> {
     try {
       const tickersComparison = tickers.slice(1);
       const options = this.getOptions(tickers[0], period, apiKey);

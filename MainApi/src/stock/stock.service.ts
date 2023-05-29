@@ -45,7 +45,7 @@ export class StockService {
     });
   }
 
-  async findOne(ticker: string, period: PeriodEnum) {
+  async findOne(ticker: string, period: PeriodEnum, onlyStock?: boolean) {
     const stock = await this.prisma.stock.findFirst({
       where: {
         ticker,
@@ -63,7 +63,10 @@ export class StockService {
       ],
     });
 
-    const promiseChart = this.chartStockService.getChart(stock.ticker, period);
+    let promiseChart = Promise.resolve([]);
+    if (!onlyStock) {
+      promiseChart = this.chartStockService.getChart(stock.ticker, period);
+    }
 
     const results = await Promise.all([promiseSummary, promiseChart]);
 
@@ -90,9 +93,17 @@ export class StockService {
 
   async findStocks(tickers: string[], period: PeriodEnum) {
     const stocks = await Promise.all(
-      tickers.map((ticker) => this.findOne(ticker, period)),
+      tickers.map((ticker) => this.findOne(ticker, period, true)),
     );
 
-    return stocks;
+    const charts = await this.chartStockService.getCharts(tickers, period);
+    const mapChart = new Map(
+      charts.map((chart) => [chart.ticker, { chart: chart.chart }]),
+    );
+
+    return stocks.map((stock) => ({
+      ...stock,
+      chart: mapChart.get(stock.ticker).chart,
+    }));
   }
 }
